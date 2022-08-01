@@ -3,7 +3,7 @@ const ObjectID = require("mongodb").ObjectID;
 import axios from 'axios'
 
 const dialogueCollection = process.env.MONGO_COLL_DIALOGUE ?? 'dialogue'
-const projectCollection = process.env.MONGO_COLL_PROJECT ?? 'projects'
+const projectCollection = process.env.MONGO_COLL_PROJECT ?? 'project'
 const transformationUrl = process.env.TRANSFORMATION_URL ?? 'http://127.0.0.1:5040/'
 const transformationInky = process.env.TRANSFORMATION_INKY ?? 'transform/inky'
 
@@ -27,7 +27,7 @@ const dialogue: FastifyPluginAsync = async (fastify, opts): Promise<void> => {
         { _id: ObjectID(request.params.id) },
         {
           $set: {
-            project: result?.insertedId
+            dialogue: result?.insertedId
           }
         },
         { upsert: true }
@@ -82,7 +82,7 @@ const dialogue: FastifyPluginAsync = async (fastify, opts): Promise<void> => {
 
       await projectColl?.updateOne(
         { _id: ObjectID(request.params.projectID) },
-        {$unset: {project:1}},
+        {$unset: {dialogue:1}},
         { upsert: true }
       );
 

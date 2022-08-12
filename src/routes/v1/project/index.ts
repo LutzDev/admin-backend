@@ -4,13 +4,13 @@ import 'dotenv/config'
 import { getProjectValidation, addProjectValidation, deleteProjectValidation } from "../../../valditation/project.validation";
 // import { Project } from "../../../models/project.model";
 
-const projectCollection = process.env.MONGO_COLL_PROJECT ?? 'projects'
+const projectsCollection = process.env.MONGO_COLL_PROJECTS ?? 'projects'
 
 const project: FastifyPluginAsync = async (fastify, opts): Promise<void> => {
 
   fastify.get("/", getProjectValidation, async function (request: any, reply: any) {
     try{
-      const projectsColl = this.mongo.db?.collection(projectCollection);
+      const projectsColl = this.mongo.db?.collection(projectsCollection);
       const result = await projectsColl?.find({}).toArray();
       reply.send(result);
     } catch (err) {
@@ -23,7 +23,7 @@ const project: FastifyPluginAsync = async (fastify, opts): Promise<void> => {
 
   fastify.post("/", addProjectValidation, async function (request: any, reply: any) {
     try{
-      const projectsColl = this.mongo.db?.collection(projectCollection);
+      const projectsColl = this.mongo.db?.collection(projectsCollection);
       const project = request.body;
       const result = await projectsColl?.insertOne(project)
       reply.send({
@@ -39,7 +39,7 @@ const project: FastifyPluginAsync = async (fastify, opts): Promise<void> => {
 
   fastify.delete('/:id', deleteProjectValidation, async function (request: any, reply: any) {
     try{
-      const projectsColl = this.mongo.db?.collection(projectCollection);
+      const projectsColl = this.mongo.db?.collection(projectsCollection);
       const result = await projectsColl?.deleteOne({ _id: ObjectID(request.params.id) });
       reply.send({
         message: `Deleted ${result?.deletedCount} project`
@@ -55,7 +55,7 @@ const project: FastifyPluginAsync = async (fastify, opts): Promise<void> => {
 
   fastify.put('/:id', async function (request: any, reply: any) {
     try{
-      const projectsColl = this.mongo.db?.collection(projectCollection);
+      const projectsColl = this.mongo.db?.collection(projectsCollection);
       const updateData = {
         $set: {
           ... request.body

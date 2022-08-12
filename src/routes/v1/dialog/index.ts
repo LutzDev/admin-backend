@@ -2,17 +2,17 @@ import { FastifyPluginAsync } from "fastify"
 const ObjectID = require("mongodb").ObjectID;
 import axios from 'axios'
 
-const dialogueCollection = process.env.MONGO_COLL_DIALOGUE ?? 'dialogue'
-const projectCollection = process.env.MONGO_COLL_PROJECT ?? 'project'
+const dialogsCollection = process.env.MONGO_COLL_DIALOGS ?? 'dialogs'
+const projectsCollection = process.env.MONGO_COLL_PROJECTS ?? 'projects'
 const transformationUrl = process.env.TRANSFORMATION_URL ?? 'http://127.0.0.1:5040/'
 const transformationInky = process.env.TRANSFORMATION_INKY ?? 'transform/inky'
 
 
-const dialogue: FastifyPluginAsync = async (fastify, opts): Promise<void> => {
+const dialog: FastifyPluginAsync = async (fastify, opts): Promise<void> => {
   fastify.post("/:id", async function (request: any, reply: any) {
     try{
-      const dialogueColl = this.mongo.db?.collection(dialogueCollection);
-      const projectColl = this.mongo.db?.collection(projectCollection);
+      const dialogsColl = this.mongo.db?.collection(dialogsCollection);
+      const projectsColl = this.mongo.db?.collection(projectsCollection);
       const data = request.body;
   
       const resp = await axios({
@@ -21,20 +21,20 @@ const dialogue: FastifyPluginAsync = async (fastify, opts): Promise<void> => {
         data: data,
       })
 
-      const result = await dialogueColl?.insertOne(resp.data)
+      const result = await dialogsColl?.insertOne(resp.data)
 
-      await projectColl?.updateOne(
+      await projectsColl?.updateOne(
         { _id: ObjectID(request.params.id) },
         {
           $set: {
-            dialogue: result?.insertedId
+            dialog: result?.insertedId
           }
         },
         { upsert: true }
       );
 
       reply.send({
-        message: `Added dialogue with ID ${result?.insertedId}`
+        message: `Added dialog with ID ${result?.insertedId}`
       })
     } catch (err) {
       fastify.log.error(err);
@@ -46,7 +46,7 @@ const dialogue: FastifyPluginAsync = async (fastify, opts): Promise<void> => {
 
   fastify.put("/:id", async function (request: any, reply: any) {
     try{
-      const dialogueColl = this.mongo.db?.collection(dialogueCollection);
+      const dialogsColl = this.mongo.db?.collection(dialogsCollection);
       const data = request.body;
       const resp = await axios({
         method: 'post',
@@ -54,7 +54,7 @@ const dialogue: FastifyPluginAsync = async (fastify, opts): Promise<void> => {
         data: data,
       })
 
-      const result = await dialogueColl?.updateOne(
+      const result = await dialogsColl?.updateOne(
         { _id: ObjectID(request.params.id) },
         {
           $set: {
@@ -75,18 +75,18 @@ const dialogue: FastifyPluginAsync = async (fastify, opts): Promise<void> => {
     }
   });
 
-  fastify.delete("/:projectID/:dialogueID", async function (request: any, reply: any) {
+  fastify.delete("/:projectID/:dialogID", async function (request: any, reply: any) {
     try{
-      const dialogueColl = this.mongo.db?.collection(dialogueCollection);
-      const projectColl = this.mongo.db?.collection(projectCollection);
+      const dialogsColl = this.mongo.db?.collection(dialogsCollection);
+      const projectsColl = this.mongo.db?.collection(projectsCollection);
 
-      await projectColl?.updateOne(
+      await projectsColl?.updateOne(
         { _id: ObjectID(request.params.projectID) },
-        {$unset: {dialogue:1}},
+        {$unset: {dialog:1}},
         { upsert: true }
       );
 
-       const result = await dialogueColl?.deleteOne({ _id: ObjectID(request.params.dialogueID) });
+      const result = await dialogsColl?.deleteOne({ _id: ObjectID(request.params.dialogID) });
 
       reply.send({
         message: `Deleted ${result?.deletedCount} dialog`
@@ -102,4 +102,4 @@ const dialogue: FastifyPluginAsync = async (fastify, opts): Promise<void> => {
 
 
 
-export default dialogue;
+export default dialog;

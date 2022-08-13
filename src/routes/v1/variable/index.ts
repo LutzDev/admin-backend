@@ -90,38 +90,84 @@ const variable: FastifyPluginAsync = async (fastify, opts): Promise<void> => {
     }
   });
 
-//   fastify.delete('/:id', async function (request: any, reply: any) {
-//     try{
-//       const projectsColl = this.mongo.db?.collection(projectCollection);
-//       const result = await projectsColl?.deleteOne({ _id: ObjectID(request.params.id) });
-//       reply.send({
-//         message: `Deleted ${result?.deletedCount} project`
-//       });
-//     } catch (err) {
-//       fastify.log.error(err);
-//       reply.send({
-//         message: `Error message: ${err}`
-//       })
-//     }
-//   })
-
-
-  fastify.put('/:id', async function (request: any, reply: any) {
+  fastify.delete('/:id', async function (request: any, reply: any) {
     try{
       const variablesColl = this.mongo.db?.collection(variablesCollection);
+      const projectsColl = this.mongo.db?.collection(projectsCollection);      
+      
+      const result = await variablesColl?.deleteOne({ _id: ObjectID(request.params.id) });
+
+      await projectsColl?.updateMany(
+        {},
+        {
+          $pull: {
+            variable: ObjectID(request.params.id)
+          }
+        }
+      )
+
+      reply.send({
+        message: `Deleted ${result?.deletedCount} project`
+      });
+    } catch (err) {
+      fastify.log.error(err);
+      reply.send({
+        message: `Error message: ${err}`
+      })
+    }
+  })
+
+
+  fastify.put('/:id/:projectID', async function (request: any, reply: any) {
+    try{
+      const params = []
+
+      type Project = {
+        variable: ObjectId []
+      }
+      const variablesColl = this.mongo.db?.collection(variablesCollection);
+      const projectsColl: Collection<Project> = this.mongo.db!.collection(projectsCollection);
+
       const updateData = {
         $set: {
           ... request.body
         },
       };
-      const result = await variablesColl?.updateOne(
+
+      const temp_param = request.params.projectID.split(',')
+
+      for (const param of temp_param){
+        params.push(ObjectID(param))
+      }
+      
+      
+      await projectsColl?.updateMany(
+        {},
+        {
+          $pull: {
+            variable: ObjectID(request.params.id)
+          }
+        }
+      )
+
+      await variablesColl?.updateOne(
         { _id: ObjectID(request.params.id) },
         updateData,
+      );
+
+      await projectsColl?.updateMany(
+        { _id: { $in: params } },
+        {
+          $push: {
+            variable: ObjectID(request.params.id)
+          }
+        },
         { upsert: true }
       );
+      
       reply.send({
-        message: `Updated ${result?.modifiedCount} variable`
-      });
+        message: `Update erfolgreich`
+      })
     } catch (err) {
       fastify.log.error(err);
       reply.send({

@@ -4,8 +4,7 @@ import 'dotenv/config'
 
 export default fp<FastifyMongodbOptions>(async (fastify, opts) => {
     fastify.register(mongodb, {
-        forceClose: true,    
-        // database: "imtt",    
+        forceClose: true,       
         url: process.env.MONGO_URL+'/'+process.env.MONGO_DB + "?authSource="+process.env.MONGO_AUTH_SOURCE,
         auth: {
             username: process.env.MONGO_USER,

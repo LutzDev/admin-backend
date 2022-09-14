@@ -3,9 +3,6 @@ const ObjectID = require("mongodb").ObjectID;
 import 'dotenv/config'
 import { Collection, Document, ObjectId } from "mongodb";
 
-// import { getProjectValidation, addProjectValidation, deleteProjectValidation } from "../../../valditation/project.validation";
-// import { Project } from "../../../models/project.model";
-
 const variablesCollection = process.env.MONGO_COLL_VARIABLES ?? 'variables'
 const projectsCollection = process.env.MONGO_COLL_PROJECTS ?? 'projects'
 
@@ -14,15 +11,13 @@ const variable: FastifyPluginAsync = async (fastify, opts): Promise<void> => {
   fastify.get("/", async function (request: any, reply: any) {
     try{
       const variablesColl = this.mongo.db?.collection(variablesCollection);
-      // const projectsColl = this.mongo.db?.collection(projectsCollection);
-      // const result = await variablesColl?.find({}).toArray();
 
       const result: Array<Document> = await variablesColl!.aggregate([
         {
           $lookup: {
               from: 'projects',
               localField: '_id',
-              foreignField: 'variable',
+              foreignField: 'variables',
               as: "projects"
             }
         },
@@ -58,22 +53,16 @@ const variable: FastifyPluginAsync = async (fastify, opts): Promise<void> => {
       const variablesColl = this.mongo.db?.collection(variablesCollection);
       const projectsColl: Collection<Project> = this.mongo.db!.collection(projectsCollection);
       const variable = request.body;
-      console.log("=====param=====")
-      console.log(request.params.id)
-      console.log("==========")
       const temp_param = request.params.id.split(',')
       for (const param of temp_param){
         params.push(ObjectID(param))
       }
-      console.log("==========")
-      console.log(params)
-      console.log("==========")
       const result = await variablesColl?.insertOne(variable)
       projectsColl?.updateMany(
         { _id: { $in: params } },
         {
           $push: {
-            variable: result?.insertedId
+            variables: result?.insertedId
           }
         },
         { upsert: true }
@@ -101,7 +90,7 @@ const variable: FastifyPluginAsync = async (fastify, opts): Promise<void> => {
         {},
         {
           $pull: {
-            variable: ObjectID(request.params.id)
+            variables: ObjectID(request.params.id)
           }
         }
       )
@@ -145,7 +134,7 @@ const variable: FastifyPluginAsync = async (fastify, opts): Promise<void> => {
         {},
         {
           $pull: {
-            variable: ObjectID(request.params.id)
+            variables: ObjectID(request.params.id)
           }
         }
       )
@@ -159,7 +148,7 @@ const variable: FastifyPluginAsync = async (fastify, opts): Promise<void> => {
         { _id: { $in: params } },
         {
           $push: {
-            variable: ObjectID(request.params.id)
+            variables: ObjectID(request.params.id)
           }
         },
         { upsert: true }

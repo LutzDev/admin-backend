@@ -1,14 +1,12 @@
 import { FastifyPluginAsync } from "fastify"
 const ObjectID = require("mongodb").ObjectID;
 import 'dotenv/config'
-import { getProjectValidation, addProjectValidation, deleteProjectValidation } from "../../../valditation/project.validation";
-// import { Project } from "../../../models/project.model";
 
 const projectsCollection = process.env.MONGO_COLL_PROJECTS ?? 'projects'
 
 const project: FastifyPluginAsync = async (fastify, opts): Promise<void> => {
 
-  fastify.get("/", getProjectValidation, async function (request: any, reply: any) {
+  fastify.get("/", async function (request: any, reply: any) {
     try{
       const projectsColl = this.mongo.db?.collection(projectsCollection);
       const result = await projectsColl?.find({}).toArray();
@@ -21,7 +19,7 @@ const project: FastifyPluginAsync = async (fastify, opts): Promise<void> => {
     }
   });
 
-  fastify.post("/", addProjectValidation, async function (request: any, reply: any) {
+  fastify.post("/", async function (request: any, reply: any) {
     try{
       const projectsColl = this.mongo.db?.collection(projectsCollection);
       const project = request.body;
@@ -37,7 +35,7 @@ const project: FastifyPluginAsync = async (fastify, opts): Promise<void> => {
     }
   });
 
-  fastify.delete('/:id', deleteProjectValidation, async function (request: any, reply: any) {
+  fastify.delete('/:id', async function (request: any, reply: any) {
     try{
       const projectsColl = this.mongo.db?.collection(projectsCollection);
       const result = await projectsColl?.deleteOne({ _id: ObjectID(request.params.id) });
